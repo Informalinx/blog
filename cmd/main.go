@@ -5,12 +5,18 @@ import (
 	"log"
 	"net/http"
 	"os"
+
+	"github.com/joho/godotenv"
 )
 
 func main() {
+	if err := godotenv.Load(".env"); err != nil {
+		log.Fatal("error while loading .env file : ", err)
+	}
+
 	addr, ok := os.LookupEnv("SERVER_ADDRESS")
 	if !ok {
-		addr = "127.0.0.1:8080"
+		log.Fatal("undefined environment variable \"SERVER_ADDRESS\"")
 	}
 
 	mux := http.NewServeMux()
