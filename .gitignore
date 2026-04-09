@@ -1,1 +1,4 @@
 .env
+
+# SQLITE
+database/*.db
