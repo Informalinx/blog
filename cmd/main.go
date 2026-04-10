@@ -5,40 +5,18 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"os"
 
-	"github.com/joho/godotenv"
+	"github.com/informalinx/blog/internal/env"
 	_ "github.com/mattn/go-sqlite3"
 )
 
-type Env struct {
-	ServerAddress string
-	DatabaseDriver string
-	DatabaseDSN string
-}
-
 func main() {
-	if err := godotenv.Load(".env"); err != nil {
-		log.Fatal("error while loading .env file : ", err)
+	conf, err := env.Load(".env")
+	if err != nil {
+		log.Fatal(err)
 	}
 
-	env := Env{}
-	lookup := map[string]*string{
-		"SERVER_ADDRESS": &env.ServerAddress,
-		"DATABASE_DRIVER": &env.DatabaseDriver,
-		"DATABASE_DSN": &env.DatabaseDSN,
-	}
-
-	for key, val := range lookup {
-		found, ok := os.LookupEnv(key)
-		if !ok {
-			log.Fatalf("undefined environment variable %q", key)
-		}
-
-		*val = found
-	}
-
-	db, err := sql.Open(env.DatabaseDriver, env.DatabaseDSN)
+	db, err := sql.Open(conf.DatabaseDriver, conf.DatabaseDSN)
 	if err != nil {
 		log.Fatalf("error while connecting to database : %s", err)
 	}
@@ -53,8 +31,8 @@ func main() {
 		w.Write([]byte("Hello, World !"))
 	}))
 
-	fmt.Println("Server listening on :", env.ServerAddress)
-	if err := http.ListenAndServe(env.ServerAddress, mux); err != nil {
+	fmt.Println("Server listening on :", conf.ServerAddress)
+	if err := http.ListenAndServe(conf.ServerAddress, mux); err != nil {
 		log.Fatal(err)
 	}
 }
