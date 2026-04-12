@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/gorilla/sessions"
 	"github.com/informalinx/blog/internal/env"
 	_ "github.com/mattn/go-sqlite3"
@@ -18,6 +19,8 @@ func main() {
 	}
 
 	_ = sessions.NewCookieStore([]byte(conf.SessionKey))
+
+	_ = validator.New()
 
 	db, err := sql.Open(conf.DatabaseDriver, conf.DatabaseDSN)
 	if err != nil {
