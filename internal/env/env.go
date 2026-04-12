@@ -11,9 +11,10 @@ import (
 )
 
 type Env struct {
-	ServerAddress string
+	ServerAddress  string
 	DatabaseDriver string
-	DatabaseDSN string
+	DatabaseDSN    string
+	SessionKey     string
 }
 
 type Loader func(*Env, string) error
@@ -25,9 +26,10 @@ func Load(filenames ...string) (Env, error) {
 	}
 
 	loaders := map[string]Loader{
-		"SERVER_ADDRESS": StringLoader(&env.ServerAddress),
+		"SERVER_ADDRESS":  StringLoader(&env.ServerAddress),
 		"DATABASE_DRIVER": StringLoader(&env.DatabaseDriver),
-		"DATABASE_DSN": StringLoader(&env.DatabaseDSN),
+		"DATABASE_DSN":    StringLoader(&env.DatabaseDSN),
+		"SESSION_KEY":     SecretLoader(&env.SessionKey),
 	}
 
 	for key, load := range loaders {
@@ -67,6 +69,18 @@ func IntLoader(field *int) Loader {
 		}
 
 		*field = intVal
+		return nil
+	}
+}
+
+func SecretLoader(field *string) Loader {
+	const MinSecretBytes = 64
+	return func(env *Env, value string) error {
+		if len(value) < MinSecretBytes {
+			return fmt.Errorf("secret is not secure enougth : %d bytes minimum required for best security", MinSecretBytes)
+		}
+
+		*field = value
 		return nil
 	}
 }

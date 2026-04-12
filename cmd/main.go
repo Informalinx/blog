@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/gorilla/sessions"
 	"github.com/informalinx/blog/internal/env"
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -15,6 +16,8 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	_ = sessions.NewCookieStore([]byte(conf.SessionKey))
 
 	db, err := sql.Open(conf.DatabaseDriver, conf.DatabaseDSN)
 	if err != nil {
