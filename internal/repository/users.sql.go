@@ -27,3 +27,14 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) error {
 	_, err := q.db.ExecContext(ctx, createUser, arg.Username, arg.Password)
 	return err
 }
+
+const findByUsername = `-- name: FindByUsername :one
+SELECT id, username, password FROM users WHERE users.username = ?
+`
+
+func (q *Queries) FindByUsername(ctx context.Context, username string) (User, error) {
+	row := q.db.QueryRowContext(ctx, findByUsername, username)
+	var i User
+	err := row.Scan(&i.ID, &i.Username, &i.Password)
+	return i, err
+}
