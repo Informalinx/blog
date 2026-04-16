@@ -9,7 +9,10 @@ import (
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gorilla/sessions"
+	"github.com/informalinx/blog/internal/blog"
+	"github.com/informalinx/blog/internal/blog/repository"
 	"github.com/informalinx/blog/internal/env"
+	"github.com/informalinx/blog/internal/lib"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 	"golang.org/x/text/language"
@@ -49,6 +52,8 @@ func main() {
 		log.Fatalf("cannot ping database : %s", err)
 	}
 
+	_ = repository.New(db)
+
 	localizer := i18n.NewLocalizer(bundle, userLocale)
 
 	funcMap := template.FuncMap{
@@ -74,16 +79,17 @@ func main() {
 		},
 	}
 
-	baseTmpl := template.Must(template.New("index.html").Funcs(funcMap).ParseFiles("./website/templates/index.html"))
+	baseTmpl := template.Must(template.New("base.html").Funcs(funcMap).ParseFiles("./website/templates/base.html"))
 
 	mux := http.NewServeMux()
 
-	mux.Handle("/{$}", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		data := struct{ Count int }{Count: 10}
-		if err := baseTmpl.Execute(w, data); err != nil {
-			log.Fatal(err)
-		}
-	}))
+	homeHandler := lib.GlobalHandler{
+		HTTPHandler: &blog.HomeHandler{
+			Template: baseTmpl,
+		},
+	}
+
+	mux.Handle("/{$}", &homeHandler)
 
 	fmt.Println("Server listening on :", conf.ServerAddress)
 	if err := http.ListenAndServe(conf.ServerAddress, mux); err != nil {
