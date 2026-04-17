@@ -32,9 +32,15 @@ const findByUsername = `-- name: FindByUsername :one
 SELECT id, username, password FROM users WHERE users.username = ?
 `
 
-func (q *Queries) FindByUsername(ctx context.Context, username string) (User, error) {
+type FindByUsernameRow struct {
+	ID       int64
+	Username string
+	Password string
+}
+
+func (q *Queries) FindByUsername(ctx context.Context, username string) (FindByUsernameRow, error) {
 	row := q.db.QueryRowContext(ctx, findByUsername, username)
-	var i User
+	var i FindByUsernameRow
 	err := row.Scan(&i.ID, &i.Username, &i.Password)
 	return i, err
 }
