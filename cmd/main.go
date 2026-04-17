@@ -30,7 +30,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	_ = sessions.NewCookieStore([]byte(conf.SessionKey))
+	cookieStore := sessions.NewCookieStore([]byte(conf.SessionKey))
 
 	_ = validator.New()
 
@@ -54,7 +54,7 @@ func main() {
 		log.Fatalf("cannot ping database : %s", err)
 	}
 
-	_ = repository.New(db)
+	queries := repository.New(db)
 
 	localizer := i18n.NewLocalizer(bundle, userLocale)
 
@@ -91,6 +91,8 @@ func main() {
 	logger := slog.New(slog.NewJSONHandler(file, &slog.HandlerOptions{}))
 
 	baseTmpl := template.Must(template.New("base.html").Funcs(funcMap).ParseFiles("./website/templates/base.html"))
+	registerTmpl := template.Must(template.Must(baseTmpl.Clone()).ParseFiles("./website/templates/register/index.html"))
+	loginTmpl := template.Must(template.Must(baseTmpl.Clone()).ParseFiles("./website/templates/login/index.html"))
 
 	mux := http.NewServeMux()
 
@@ -101,7 +103,26 @@ func main() {
 		},
 	}
 
+	registerHandler := lib.GlobalHandler{
+		Logger: logger,
+		HTTPHandler: &blog.RegisterHandler{
+			Template: registerTmpl,
+			Queries:  queries,
+		},
+	}
+
+	loginHandler := lib.GlobalHandler{
+		Logger: logger,
+		HTTPHandler: &blog.LoginHandler{
+			Queries:  queries,
+			Template: loginTmpl,
+			Store:    cookieStore,
+		},
+	}
+
 	mux.Handle("/{$}", &homeHandler)
+	mux.Handle("/register", &registerHandler)
+	mux.Handle("/login", &loginHandler)
 
 	fmt.Println("Server listening on :", conf.ServerAddress)
 	if err := http.ListenAndServe(conf.ServerAddress, mux); err != nil {

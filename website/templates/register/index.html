@@ -1,0 +1,16 @@
+{{ block "main" . }}
+<section>
+    <h1>{{ "register" | trans nil }}</h1>
+    <form action="" method="post">
+        <div>
+            <label for="register-username">{{ "username" | trans nil }}</label>
+            <input type="text" id="register-username" name="register_username" required>
+        </div>
+        <div>
+            <label for="register-password">{{ "password" | trans nil }}</label>
+            <input type="password" id="register-password" name="register_password" minlength="8" required>
+        </div>
+        <button type="submit">{{ "submit" | trans nil }}</button>
+    </form>
+</section>
+{{ end }}

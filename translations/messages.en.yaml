@@ -1,1 +1,5 @@
-number_of_sisters: "I have {{ .Count }} sisters"
+register: "Register"
+login: "Login"
+username: "Username"
+password: "Password"
+submit: "Submit"
