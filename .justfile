@@ -6,3 +6,6 @@ generate-secret:
 
 migrations action:
     go tool goose {{ action }}
+
+mailhog:
+    go tool MailHog

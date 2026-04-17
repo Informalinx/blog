@@ -39,7 +39,15 @@ require (
 	github.com/golang-sql/sqlexp v0.1.0 // indirect
 	github.com/google/cel-go v0.26.1 // indirect
 	github.com/google/uuid v1.6.0 // indirect
+	github.com/gorilla/context v1.1.2 // indirect
+	github.com/gorilla/mux v1.8.1 // indirect
+	github.com/gorilla/pat v1.0.2 // indirect
 	github.com/gorilla/securecookie v1.1.2 // indirect
+	github.com/gorilla/websocket v1.4.2 // indirect
+	github.com/ian-kent/envconf v0.0.0-20141026121121-c19809918c02 // indirect
+	github.com/ian-kent/go-log v0.0.0-20160113211217-5731446c36ab // indirect
+	github.com/ian-kent/goose v0.0.0-20141221090059-c3541ea826ad // indirect
+	github.com/ian-kent/linkio v0.0.0-20170807205755-97566b872887 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 // indirect
@@ -49,13 +57,23 @@ require (
 	github.com/jonboulle/clockwork v0.5.0 // indirect
 	github.com/klauspost/compress v1.18.4 // indirect
 	github.com/leodido/go-urn v1.4.0 // indirect
+	github.com/mailhog/MailHog v1.0.1 // indirect
+	github.com/mailhog/MailHog-Server v1.0.1 // indirect
+	github.com/mailhog/MailHog-UI v1.0.1 // indirect
+	github.com/mailhog/data v1.0.1 // indirect
+	github.com/mailhog/http v1.0.1 // indirect
+	github.com/mailhog/mhsendmail v0.2.0 // indirect
+	github.com/mailhog/smtp v1.0.1 // indirect
+	github.com/mailhog/storage v1.0.1 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mfridman/interpolate v0.0.2 // indirect
 	github.com/mfridman/xflag v0.1.0 // indirect
 	github.com/microsoft/go-mssqldb v1.9.6 // indirect
 	github.com/ncruces/go-strftime v1.0.0 // indirect
+	github.com/ogier/pflag v0.0.1 // indirect
 	github.com/paulmach/orb v0.12.0 // indirect
 	github.com/pganalyze/pg_query_go/v6 v6.1.0 // indirect
+	github.com/philhofer/fwd v1.2.0 // indirect
 	github.com/pierrec/lz4/v4 v4.1.25 // indirect
 	github.com/pingcap/errors v0.11.5-0.20240311024730-e056997136bb // indirect
 	github.com/pingcap/failpoint v0.0.0-20240528011301-b51a646c7c86 // indirect
@@ -72,7 +90,9 @@ require (
 	github.com/spf13/pflag v1.0.7 // indirect
 	github.com/sqlc-dev/sqlc v1.30.0 // indirect
 	github.com/stoewer/go-strcase v1.2.0 // indirect
+	github.com/t-k/fluent-logger-golang v1.0.0 // indirect
 	github.com/tetratelabs/wazero v1.9.0 // indirect
+	github.com/tinylib/msgp v1.6.4 // indirect
 	github.com/tursodatabase/libsql-client-go v0.0.0-20251219100830-236aa1ff8acc // indirect
 	github.com/vertica/vertica-sql-go v1.3.5 // indirect
 	github.com/wasilibs/go-pgquery v0.0.0-20250409022910-10ac41983c07 // indirect
@@ -94,6 +114,9 @@ require (
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20260401024825-9d38bb4040a9 // indirect
 	google.golang.org/grpc v1.79.3 // indirect
 	google.golang.org/protobuf v1.36.11 // indirect
+	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc // indirect
+	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df // indirect
+	gopkg.in/mgo.v2 v2.0.0-20190816093944-a6b53ec6cb22 // indirect
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1 // indirect
 	howett.net/plist v1.0.1 // indirect
 	modernc.org/libc v1.68.0 // indirect
@@ -103,6 +126,7 @@ require (
 )
 
 tool (
+	github.com/mailhog/MailHog
 	github.com/pressly/goose/v3/cmd/goose
 	github.com/sqlc-dev/sqlc/cmd/sqlc
 )

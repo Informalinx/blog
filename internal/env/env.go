@@ -15,6 +15,14 @@ type Env struct {
 	DatabaseDriver string
 	DatabaseDSN    string
 	SessionKey     string
+	SMTP           SMTPConfig
+}
+
+type SMTPConfig struct {
+	Host     string
+	Port     int
+	Username string
+	Password string
 }
 
 type Loader func(*Env, string) error
@@ -30,6 +38,10 @@ func Load(filenames ...string) (Env, error) {
 		"DATABASE_DRIVER": StringLoader(&env.DatabaseDriver),
 		"DATABASE_DSN":    StringLoader(&env.DatabaseDSN),
 		"SESSION_KEY":     SecretLoader(&env.SessionKey),
+		"SMTP_HOST":       StringLoader(&env.SMTP.Host),
+		"SMTP_PORT":       IntLoader(&env.SMTP.Port),
+		"SMTP_USERNAME":   StringLoader(&env.SMTP.Username),
+		"SMTP_PASSWORD":   StringLoader(&env.SMTP.Password),
 	}
 
 	for key, load := range loaders {
