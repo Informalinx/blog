@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"html/template"
 	"log"
+	"log/slog"
 	"net/http"
+	"os"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gorilla/sessions"
@@ -79,11 +81,21 @@ func main() {
 		},
 	}
 
+	file, err := os.OpenFile("./logs/error.log", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	defer file.Close()
+
+	logger := slog.New(slog.NewJSONHandler(file, &slog.HandlerOptions{}))
+
 	baseTmpl := template.Must(template.New("base.html").Funcs(funcMap).ParseFiles("./website/templates/base.html"))
 
 	mux := http.NewServeMux()
 
 	homeHandler := lib.GlobalHandler{
+		Logger: logger,
 		HTTPHandler: &blog.HomeHandler{
 			Template: baseTmpl,
 		},

@@ -2,3 +2,6 @@
 
 # SQLITE
 database/*.db
+
+# LOGS
+logs/*

@@ -1,6 +1,7 @@
 package lib
 
 import (
+	"log/slog"
 	"maps"
 	"net/http"
 
@@ -15,6 +16,10 @@ type Response struct {
 }
 
 func (response *Response) Redirect(url string, code int) Response {
+	if response.Header == nil {
+		response.Header = http.Header{}
+	}
+
 	response.StatusCode = code
 	response.Header.Set("Location", url)
 
@@ -22,15 +27,19 @@ func (response *Response) Redirect(url string, code int) Response {
 }
 
 type HTTPHandler interface {
-	Handle(*http.Request) Response
+	Handle(*http.Request) (Response, error)
 }
 
 type GlobalHandler struct {
 	HTTPHandler
+	Logger *slog.Logger
 }
 
 func (handler *GlobalHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
-	response := handler.Handle(request)
+	response, err := handler.Handle(request)
+	if err != nil {
+		handler.Logger.Error(err.Error())
+	}
 
 	for _, session := range response.Sessions {
 		if err := session.Save(request, writer); err != nil {
