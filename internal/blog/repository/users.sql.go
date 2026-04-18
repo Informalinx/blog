@@ -12,35 +12,43 @@ import (
 const createUser = `-- name: CreateUser :exec
 INSERT INTO users (
     username,
+    email,
     password
 ) VALUES (
-    ?, ?
+    ?, ?, ?
 )
 `
 
 type CreateUserParams struct {
 	Username string
+	Email    string
 	Password string
 }
 
 func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) error {
-	_, err := q.db.ExecContext(ctx, createUser, arg.Username, arg.Password)
+	_, err := q.db.ExecContext(ctx, createUser, arg.Username, arg.Email, arg.Password)
 	return err
 }
 
-const findByUsername = `-- name: FindByUsername :one
-SELECT id, username, password FROM users WHERE users.username = ?
+const findByEmail = `-- name: FindByEmail :one
+SELECT id, username, email, password FROM users WHERE users.email = ?
 `
 
-type FindByUsernameRow struct {
+type FindByEmailRow struct {
 	ID       int64
 	Username string
+	Email    string
 	Password string
 }
 
-func (q *Queries) FindByUsername(ctx context.Context, username string) (FindByUsernameRow, error) {
-	row := q.db.QueryRowContext(ctx, findByUsername, username)
-	var i FindByUsernameRow
-	err := row.Scan(&i.ID, &i.Username, &i.Password)
+func (q *Queries) FindByEmail(ctx context.Context, email string) (FindByEmailRow, error) {
+	row := q.db.QueryRowContext(ctx, findByEmail, email)
+	var i FindByEmailRow
+	err := row.Scan(
+		&i.ID,
+		&i.Username,
+		&i.Email,
+		&i.Password,
+	)
 	return i, err
 }

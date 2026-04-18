@@ -1,5 +1,6 @@
 register: "Register"
 login: "Login"
+email: "Email"
 username: "Username"
 password: "Password"
 submit: "Submit"

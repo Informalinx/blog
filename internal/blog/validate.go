@@ -15,3 +15,7 @@ func ValidateUsername(username string) error {
 func ValidatePassword(password string) error {
 	return validate.Var(password, "required,min=8")
 }
+
+func ValidateEmail(email string) error {
+	return validate.Var(email, "required,email")
+}
