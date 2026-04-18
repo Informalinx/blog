@@ -13,41 +13,50 @@ const createUser = `-- name: CreateUser :exec
 INSERT INTO users (
     username,
     email,
+    email_hash,
     password
 ) VALUES (
-    ?, ?, ?
+    ?, ?, ?, ?
 )
 `
 
 type CreateUserParams struct {
-	Username string
-	Email    string
-	Password string
+	Username  string
+	Email     string
+	EmailHash string
+	Password  string
 }
 
 func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) error {
-	_, err := q.db.ExecContext(ctx, createUser, arg.Username, arg.Email, arg.Password)
+	_, err := q.db.ExecContext(ctx, createUser,
+		arg.Username,
+		arg.Email,
+		arg.EmailHash,
+		arg.Password,
+	)
 	return err
 }
 
 const findByEmail = `-- name: FindByEmail :one
-SELECT id, username, email, password FROM users WHERE users.email = ?
+SELECT id, username, email, email_hash, password FROM users WHERE users.email_hash = ?
 `
 
 type FindByEmailRow struct {
-	ID       int64
-	Username string
-	Email    string
-	Password string
+	ID        int64
+	Username  string
+	Email     string
+	EmailHash string
+	Password  string
 }
 
-func (q *Queries) FindByEmail(ctx context.Context, email string) (FindByEmailRow, error) {
-	row := q.db.QueryRowContext(ctx, findByEmail, email)
+func (q *Queries) FindByEmail(ctx context.Context, emailHash string) (FindByEmailRow, error) {
+	row := q.db.QueryRowContext(ctx, findByEmail, emailHash)
 	var i FindByEmailRow
 	err := row.Scan(
 		&i.ID,
 		&i.Username,
 		&i.Email,
+		&i.EmailHash,
 		&i.Password,
 	)
 	return i, err

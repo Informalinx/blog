@@ -1,6 +1,7 @@
 package env
 
 import (
+	"encoding/base64"
 	"fmt"
 	"log"
 	"os"
@@ -11,11 +12,13 @@ import (
 )
 
 type Env struct {
-	ServerAddress  string
-	DatabaseDriver string
-	DatabaseDSN    string
-	SessionKey     string
-	SMTP           SMTPConfig
+	ServerAddress      string
+	DatabaseDriver     string
+	DatabaseDSN        string
+	SessionKey         string
+	SMTP               SMTPConfig
+	EmailHashKey       string
+	EmailEncryptionKey []byte
 }
 
 type SMTPConfig struct {
@@ -34,14 +37,16 @@ func Load(filenames ...string) (Env, error) {
 	}
 
 	loaders := map[string]Loader{
-		"SERVER_ADDRESS":  StringLoader(&env.ServerAddress),
-		"DATABASE_DRIVER": StringLoader(&env.DatabaseDriver),
-		"DATABASE_DSN":    StringLoader(&env.DatabaseDSN),
-		"SESSION_KEY":     SecretLoader(&env.SessionKey),
-		"SMTP_HOST":       StringLoader(&env.SMTP.Host),
-		"SMTP_PORT":       IntLoader(&env.SMTP.Port),
-		"SMTP_USERNAME":   StringLoader(&env.SMTP.Username),
-		"SMTP_PASSWORD":   StringLoader(&env.SMTP.Password),
+		"SERVER_ADDRESS":       StringLoader(&env.ServerAddress),
+		"DATABASE_DRIVER":      StringLoader(&env.DatabaseDriver),
+		"DATABASE_DSN":         StringLoader(&env.DatabaseDSN),
+		"SESSION_KEY":          SecretLoader(&env.SessionKey),
+		"EMAIL_HASH_KEY":       SecretLoader(&env.EmailHashKey),
+		"EMAIL_ENCRYPTION_KEY": BytesKeyLoader(&env.EmailEncryptionKey, 32, base64.RawStdEncoding.DecodeString),
+		"SMTP_HOST":            StringLoader(&env.SMTP.Host),
+		"SMTP_PORT":            IntLoader(&env.SMTP.Port),
+		"SMTP_USERNAME":        StringLoader(&env.SMTP.Username),
+		"SMTP_PASSWORD":        StringLoader(&env.SMTP.Password),
 	}
 
 	for key, load := range loaders {
@@ -93,6 +98,25 @@ func SecretLoader(field *string) Loader {
 		}
 
 		*field = value
+		return nil
+	}
+}
+
+func BytesKeyLoader(field *[]byte, length int, decoder func(string) ([]byte, error)) Loader {
+	if len(*field) < length {
+		*field = make([]byte, length)
+	}
+
+	return func(env *Env, value string) error {
+		bytesVal, err := base64.RawStdEncoding.DecodeString(value)
+		if err != nil {
+			return err
+		}
+		if len(bytesVal) != length {
+			return fmt.Errorf("key must contains %d bytes", length)
+		}
+
+		*field = bytesVal
 		return nil
 	}
 }

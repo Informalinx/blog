@@ -5,8 +5,9 @@
 package repository
 
 type User struct {
-	ID       int64
-	Email    string
-	Username string
-	Password string
+	ID        int64
+	Email     string
+	EmailHash string
+	Username  string
+	Password  string
 }

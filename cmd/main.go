@@ -106,6 +106,7 @@ func main() {
 	registerHandler := lib.GlobalHandler{
 		Logger: logger,
 		HTTPHandler: &blog.RegisterHandler{
+			Config:   conf,
 			Template: registerTmpl,
 			Queries:  queries,
 		},
