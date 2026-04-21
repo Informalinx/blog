@@ -7,9 +7,9 @@ import (
 	"net/http"
 
 	"github.com/gorilla/sessions"
-	"github.com/informalinx/blog/internal/blog/repository"
 	"github.com/informalinx/blog/internal/env"
 	"github.com/informalinx/blog/internal/lib"
+	"github.com/informalinx/blog/internal/repository"
 )
 
 type HomeHandler struct {
@@ -120,7 +120,7 @@ type RegisterEmailHandler struct {
 func (handler *RegisterEmailHandler) Handle(request *http.Request) (lib.Response, error) {
 	response := lib.Response{}
 	email := "user@test.com"
-	emailHash, err := HashEmail(email, handler.Conf.EmailHashKey)
+	emailHash, err := lib.HashEmail(email, handler.Conf.EmailHashKey)
 	if err != nil {
 		response.StatusCode = http.StatusInternalServerError
 		return response, err
@@ -132,7 +132,7 @@ func (handler *RegisterEmailHandler) Handle(request *http.Request) (lib.Response
 		return response, err
 	}
 
-	decryptedEmail, err := DecryptEmail(user.Email, handler.Conf.EmailEncryptionKey)
+	decryptedEmail, err := lib.DecryptEmail(user.Email, handler.Conf.EmailEncryptionKey)
 	if err != nil {
 		response.StatusCode = http.StatusInternalServerError
 		return response, err
