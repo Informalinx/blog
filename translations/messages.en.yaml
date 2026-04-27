@@ -4,3 +4,5 @@ email: "Email"
 username: "Username"
 password: "Password"
 submit: "Submit"
+
+register_success: "Your account has been successfully created"

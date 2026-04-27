@@ -108,9 +108,10 @@ func main() {
 		Logger:      logger,
 		CookieStore: cookieStore,
 		HTTPHandler: &blog.RegisterHandler{
-			Config:   conf,
-			Template: registerTmpl,
-			Queries:  queries,
+			Config:    conf,
+			Template:  registerTmpl,
+			Queries:   queries,
+			Localizer: localizer,
 		},
 	}
 

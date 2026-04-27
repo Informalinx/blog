@@ -10,10 +10,11 @@ import (
 	"github.com/informalinx/blog/internal/env"
 	"github.com/informalinx/blog/internal/lib"
 	"github.com/informalinx/blog/internal/repository"
+	"github.com/nicksnyder/go-i18n/v2/i18n"
 	"golang.org/x/crypto/bcrypt"
 )
 
-func Register(user repository.CreateUserParams, conf env.Env, queries *repository.Queries, onSuccess func(*lib.Response) error) (lib.Response, error) {
+func Register(user repository.CreateUserParams, conf env.Env, session *sessions.Session, localizer *i18n.Localizer, queries *repository.Queries, onSuccess func(*lib.Response) error) (lib.Response, error) {
 	response := lib.Response{}
 	if err := ValidateEmail(user.Email); err != nil {
 		response.StatusCode = http.StatusUnprocessableEntity
@@ -64,6 +65,17 @@ func Register(user repository.CreateUserParams, conf env.Env, queries *repositor
 			return response, err
 		}
 	}
+
+	message, err := localizer.Localize(&i18n.LocalizeConfig{
+		MessageID: "register_success",
+	})
+
+	if err != nil {
+		response.StatusCode = http.StatusInternalServerError
+		return response, err
+	}
+
+	session.AddFlash(message, "flash_success")
 
 	if onSuccess == nil {
 		return response.Redirect("/", http.StatusSeeOther), nil

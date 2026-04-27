@@ -6,6 +6,16 @@
         <title>Blog</title>
     </head>
     <body>
+        <aside>
+            {{ range $index, $message := $.Session.Flashes "flash_success" }}
+                <p>{{ $message }}</p>
+            {{ end }}
+
+            {{ range $index, $message := $.Session.Flashes "flash_error" }}
+                <p>{{ $message }}</p>
+            {{ end }}
+        </aside>
+
         <header></header>
 
         <main>{{ block "main" . }}{{ end }}</main>

@@ -10,6 +10,7 @@ import (
 	"github.com/informalinx/blog/internal/env"
 	"github.com/informalinx/blog/internal/lib"
 	"github.com/informalinx/blog/internal/repository"
+	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
 
 type HomeHandler struct {
@@ -19,7 +20,10 @@ type HomeHandler struct {
 func (handler *HomeHandler) Handle(request *http.Request, session *sessions.Session) (lib.Response, error) {
 	response := lib.Response{}
 
-	data := struct{ Count int }{Count: 10}
+	data := struct {
+		Session *sessions.Session
+		Count   int
+	}{Count: 10, Session: session}
 	buffer := bytes.Buffer{}
 	if err := handler.Template.Execute(&buffer, data); err != nil {
 		response.StatusCode = http.StatusInternalServerError
@@ -55,7 +59,7 @@ func (handler *LoginHandler) Handle(request *http.Request, session *sessions.Ses
 	}
 
 	buffer := bytes.Buffer{}
-	data := map[string]string{}
+	data := struct{ Session *sessions.Session }{Session: session}
 	if err := handler.Template.Execute(&buffer, data); err != nil {
 		response.StatusCode = http.StatusInternalServerError
 		return response, err
@@ -68,9 +72,10 @@ func (handler *LoginHandler) Handle(request *http.Request, session *sessions.Ses
 }
 
 type RegisterHandler struct {
-	Config   env.Env
-	Queries  *repository.Queries
-	Template *template.Template
+	Config    env.Env
+	Queries   *repository.Queries
+	Template  *template.Template
+	Localizer *i18n.Localizer
 }
 
 func (handler *RegisterHandler) Handle(request *http.Request, session *sessions.Session) (lib.Response, error) {
@@ -90,10 +95,10 @@ func (handler *RegisterHandler) Handle(request *http.Request, session *sessions.
 		user.Username = request.PostFormValue("register_username")
 		user.Password = request.PostFormValue("register_password")
 
-		return Register(user, handler.Config, handler.Queries, nil)
+		return Register(user, handler.Config, session, handler.Localizer, handler.Queries, nil)
 	}
 
-	data := struct{}{}
+	data := struct{ Session *sessions.Session }{Session: session}
 	buffer := bytes.Buffer{}
 	if err := handler.Template.Execute(&buffer, data); err != nil {
 		response.StatusCode = http.StatusInternalServerError
