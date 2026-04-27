@@ -21,7 +21,6 @@ type Env struct {
 	SMTP               SMTPConfig
 	EmailHashKey       string
 	EmailEncryptionKey []byte
-	HTTPOrigin         string
 }
 
 type SMTPConfig struct {
