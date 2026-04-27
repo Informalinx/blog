@@ -36,12 +36,6 @@ func Register(user repository.CreateUserParams, conf env.Env, queries *repositor
 		return response, err
 	}
 
-	_, err = queries.FindUserByEmail(user.Email, conf.EmailHashKey)
-	if err != nil && !errors.Is(err, sql.ErrNoRows) {
-		response.StatusCode = http.StatusInternalServerError
-		return response, err
-	}
-
 	emailHash, err := lib.HashEmail(user.Email, conf.EmailHashKey)
 	if err != nil {
 		response.StatusCode = http.StatusInternalServerError
@@ -58,9 +52,17 @@ func Register(user repository.CreateUserParams, conf env.Env, queries *repositor
 	user.EmailHash = emailHash
 	user.Password = string(hashed)
 
-	if err := queries.CreateUser(context.Background(), user); err != nil {
+	emailExists, err := queries.EmailExists(context.Background(), emailHash)
+	if err != nil {
 		response.StatusCode = http.StatusInternalServerError
-		return response, nil
+		return response, err
+	}
+
+	if !emailExists {
+		if err := queries.CreateUser(context.Background(), user); err != nil {
+			response.StatusCode = http.StatusInternalServerError
+			return response, err
+		}
 	}
 
 	if onSuccess == nil {
