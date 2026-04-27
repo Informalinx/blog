@@ -31,6 +31,12 @@ func main() {
 	}
 
 	cookieStore := sessions.NewCookieStore([]byte(conf.SessionKey))
+	cookieStore.Options.HttpOnly = true
+	cookieStore.Options.MaxAge = 60 * 60 * 20
+	cookieStore.Options.Partitioned = true
+	cookieStore.Options.SameSite = http.SameSiteStrictMode
+	cookieStore.Options.Path = "/"
+	cookieStore.Options.Secure = true
 
 	_ = validator.New()
 
