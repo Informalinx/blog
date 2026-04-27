@@ -97,14 +97,16 @@ func main() {
 	mux := http.NewServeMux()
 
 	homeHandler := lib.GlobalHandler{
-		Logger: logger,
+		Logger:      logger,
+		CookieStore: cookieStore,
 		HTTPHandler: &blog.HomeHandler{
 			Template: baseTmpl,
 		},
 	}
 
 	registerHandler := lib.GlobalHandler{
-		Logger: logger,
+		Logger:      logger,
+		CookieStore: cookieStore,
 		HTTPHandler: &blog.RegisterHandler{
 			Config:   conf,
 			Template: registerTmpl,
@@ -113,11 +115,12 @@ func main() {
 	}
 
 	loginHandler := lib.GlobalHandler{
-		Logger: logger,
+		Logger:      logger,
+		CookieStore: cookieStore,
 		HTTPHandler: &blog.LoginHandler{
+			Config:   conf,
 			Queries:  queries,
 			Template: loginTmpl,
-			Store:    cookieStore,
 		},
 	}
 

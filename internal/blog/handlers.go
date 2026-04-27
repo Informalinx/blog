@@ -16,7 +16,7 @@ type HomeHandler struct {
 	Template *template.Template
 }
 
-func (handler *HomeHandler) Handle(request *http.Request) (lib.Response, error) {
+func (handler *HomeHandler) Handle(request *http.Request, session *sessions.Session) (lib.Response, error) {
 	response := lib.Response{}
 
 	data := struct{ Count int }{Count: 10}
@@ -36,10 +36,9 @@ type LoginHandler struct {
 	Config   env.Env
 	Queries  *repository.Queries
 	Template *template.Template
-	Store    *sessions.CookieStore
 }
 
-func (handler *LoginHandler) Handle(request *http.Request) (lib.Response, error) {
+func (handler *LoginHandler) Handle(request *http.Request, session *sessions.Session) (lib.Response, error) {
 	var Guards = []lib.Guard{
 		CheckHTTPMethods([]string{http.MethodGet, http.MethodPost}),
 	}
@@ -51,12 +50,6 @@ func (handler *LoginHandler) Handle(request *http.Request) (lib.Response, error)
 	if request.Method == http.MethodPost {
 		email := request.PostFormValue("login_email")
 		password := request.PostFormValue("login_password")
-
-		session, err := handler.Store.Get(request, "id")
-		if err != nil {
-			response.StatusCode = http.StatusInternalServerError
-			return response, nil
-		}
 
 		return Login(email, password, handler.Config, handler.Queries, session, nil)
 	}
@@ -80,13 +73,15 @@ type RegisterHandler struct {
 	Template *template.Template
 }
 
-func (handler *RegisterHandler) Handle(request *http.Request) (lib.Response, error) {
+func (handler *RegisterHandler) Handle(request *http.Request, session *sessions.Session) (lib.Response, error) {
 	var Guards = []lib.Guard{
 		CheckHTTPMethods([]string{http.MethodPost, http.MethodGet}),
 	}
 	if response, ok := lib.ApplyGuards(Guards, request); ok {
 		return response, nil
 	}
+
+	response := lib.Response{}
 
 	if request.Method == http.MethodPost {
 		user := repository.CreateUserParams{}
@@ -98,7 +93,6 @@ func (handler *RegisterHandler) Handle(request *http.Request) (lib.Response, err
 		return Register(user, handler.Config, handler.Queries, nil)
 	}
 
-	response := lib.Response{}
 	data := struct{}{}
 	buffer := bytes.Buffer{}
 	if err := handler.Template.Execute(&buffer, data); err != nil {
@@ -117,7 +111,7 @@ type RegisterEmailHandler struct {
 	Queries *repository.Queries
 }
 
-func (handler *RegisterEmailHandler) Handle(request *http.Request) (lib.Response, error) {
+func (handler *RegisterEmailHandler) Handle(request *http.Request, session *sessions.Session) (lib.Response, error) {
 	response := lib.Response{}
 	email := "user@test.com"
 	emailHash, err := lib.HashEmail(email, handler.Conf.EmailHashKey)

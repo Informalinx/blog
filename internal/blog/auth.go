@@ -113,8 +113,6 @@ func Login(email, password string, conf env.Env, queries *repository.Queries, se
 
 	session.Values["user_id"] = user.ID
 
-	response.Sessions = append(response.Sessions, session)
-
 	if onSuccess == nil {
 		return response.Redirect("/", http.StatusSeeOther), nil
 	} else {

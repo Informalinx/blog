@@ -12,7 +12,6 @@ type Response struct {
 	StatusCode int
 	Body       []byte
 	Header     http.Header
-	Sessions   []*sessions.Session
 }
 
 func (response *Response) Redirect(url string, code int) Response {
@@ -27,25 +26,30 @@ func (response *Response) Redirect(url string, code int) Response {
 }
 
 type HTTPHandler interface {
-	Handle(*http.Request) (Response, error)
+	Handle(*http.Request, *sessions.Session) (Response, error)
 }
 
 type GlobalHandler struct {
 	HTTPHandler
-	Logger *slog.Logger
+	Logger      *slog.Logger
+	CookieStore *sessions.CookieStore
 }
 
 func (handler *GlobalHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
-	response, err := handler.Handle(request)
+	session, err := handler.CookieStore.Get(request, "id")
+	if err != nil {
+		writer.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	response, err := handler.Handle(request, session)
 	if err != nil {
 		handler.Logger.Error(err.Error())
 	}
 
-	for _, session := range response.Sessions {
-		if err := session.Save(request, writer); err != nil {
-			writer.WriteHeader(http.StatusInternalServerError)
-			return
-		}
+	if err := session.Save(request, writer); err != nil {
+		writer.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 
 	maps.Copy(writer.Header(), response.Header)
