@@ -135,8 +135,8 @@ func main() {
 	mux.Handle("/register", &registerHandler)
 	mux.Handle("/login", &loginHandler)
 
-	fmt.Println("Server listening on :", conf.ServerAddress)
-	if err := http.ListenAndServe(conf.ServerAddress, mux); err != nil {
+	fmt.Println("Server listening on :", conf.ServerOrigin.Host)
+	if err := http.ListenAndServe(conf.ServerOrigin.Host, mux); err != nil {
 		log.Fatal(err)
 	}
 }

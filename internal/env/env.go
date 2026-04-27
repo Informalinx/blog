@@ -4,21 +4,24 @@ import (
 	"encoding/base64"
 	"fmt"
 	"log"
+	"net/url"
 	"os"
 	"strconv"
 	"strings"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/joho/godotenv"
 )
 
 type Env struct {
-	ServerAddress      string
+	ServerOrigin       url.URL
 	DatabaseDriver     string
 	DatabaseDSN        string
 	SessionKey         string
 	SMTP               SMTPConfig
 	EmailHashKey       string
 	EmailEncryptionKey []byte
+	HTTPOrigin         string
 }
 
 type SMTPConfig struct {
@@ -36,8 +39,10 @@ func Load(filenames ...string) (Env, error) {
 		return env, fmt.Errorf("error while loading .env file : %s", err)
 	}
 
+	validate := validator.New()
+
 	loaders := map[string]Loader{
-		"SERVER_ADDRESS":       StringLoader(&env.ServerAddress),
+		"SERVER_ORIGIN":        HTTPOriginLoader(&env.ServerOrigin, validate),
 		"DATABASE_DRIVER":      StringLoader(&env.DatabaseDriver),
 		"DATABASE_DSN":         StringLoader(&env.DatabaseDSN),
 		"SESSION_KEY":          SecretLoader(&env.SessionKey),
@@ -117,6 +122,22 @@ func BytesKeyLoader(field *[]byte, length int, decoder func(string) ([]byte, err
 		}
 
 		*field = bytesVal
+		return nil
+	}
+}
+
+func HTTPOriginLoader(field *url.URL, validate *validator.Validate) Loader {
+	return func(env *Env, value string) error {
+		if err := validate.Var(value, "required,http_url"); err != nil {
+			return fmt.Errorf("value must be formatted has a valid HTTP origin (\"http://hostname:port\" or \"https://hostname:port\")")
+		}
+
+		val, err := url.Parse(value)
+		if err != nil {
+			return err
+		}
+
+		*field = *val
 		return nil
 	}
 }
