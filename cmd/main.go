@@ -25,18 +25,20 @@ import (
 var userLocale = language.English.String()
 
 func main() {
-	conf, err := env.Load(".env")
+	environment, err := env.Load(".env")
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	cookieStore := sessions.NewCookieStore([]byte(conf.SessionKey))
-	cookieStore.Options.HttpOnly = true
-	cookieStore.Options.MaxAge = 60 * 60 * 20
-	cookieStore.Options.Partitioned = true
-	cookieStore.Options.SameSite = http.SameSiteStrictMode
-	cookieStore.Options.Path = "/"
-	cookieStore.Options.Secure = true
+	conf := blog.NewConfig(environment)
+
+	cookieStore := sessions.NewCookieStore([]byte(conf.Session.AuthKey))
+	cookieStore.Options.HttpOnly = conf.Session.HttpOnly
+	cookieStore.Options.MaxAge = conf.Session.MaxAge
+	cookieStore.Options.Partitioned = conf.Session.Partitioned
+	cookieStore.Options.SameSite = conf.Session.SameSite
+	cookieStore.Options.Path = conf.Session.Path
+	cookieStore.Options.Secure = conf.Session.Secure
 
 	_ = validator.New()
 
@@ -51,7 +53,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	db, err := sql.Open(conf.DatabaseDriver, conf.DatabaseDSN)
+	db, err := sql.Open(conf.Database.Driver, conf.Database.DSN)
 	if err != nil {
 		log.Fatalf("error while connecting to database : %s", err)
 	}
@@ -106,6 +108,7 @@ func main() {
 		Logger:      logger,
 		CookieStore: cookieStore,
 		HTTPHandler: &blog.HomeHandler{
+			Config:   conf,
 			Template: baseTmpl,
 		},
 	}
@@ -135,8 +138,8 @@ func main() {
 	mux.Handle("/register", &registerHandler)
 	mux.Handle("/login", &loginHandler)
 
-	fmt.Println("Server listening on :", conf.ServerOrigin.Host)
-	if err := http.ListenAndServe(conf.ServerOrigin.Host, mux); err != nil {
+	fmt.Println("Server listening on :", conf.Server.Origin.Host)
+	if err := http.ListenAndServe(conf.Server.Origin.Host, mux); err != nil {
 		log.Fatal(err)
 	}
 }

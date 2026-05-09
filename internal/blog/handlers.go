@@ -14,6 +14,7 @@ import (
 )
 
 type HomeHandler struct {
+	Config   Config
 	Template *template.Template
 }
 
@@ -37,7 +38,7 @@ func (handler *HomeHandler) Handle(request *http.Request, session *sessions.Sess
 }
 
 type LoginHandler struct {
-	Config   env.Env
+	Config   Config
 	Queries  *repository.Queries
 	Template *template.Template
 }
@@ -51,6 +52,7 @@ func (handler *LoginHandler) Handle(request *http.Request, session *sessions.Ses
 	}
 
 	response := lib.Response{}
+
 	if request.Method == http.MethodPost {
 		email := request.PostFormValue("login_email")
 		password := request.PostFormValue("login_password")
@@ -72,7 +74,7 @@ func (handler *LoginHandler) Handle(request *http.Request, session *sessions.Ses
 }
 
 type RegisterHandler struct {
-	Config    env.Env
+	Config    Config
 	Queries   *repository.Queries
 	Template  *template.Template
 	Localizer *i18n.Localizer

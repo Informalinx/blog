@@ -7,14 +7,13 @@ import (
 	"net/http"
 
 	"github.com/gorilla/sessions"
-	"github.com/informalinx/blog/internal/env"
 	"github.com/informalinx/blog/internal/lib"
 	"github.com/informalinx/blog/internal/repository"
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 	"golang.org/x/crypto/bcrypt"
 )
 
-func Register(user repository.CreateUserParams, conf env.Env, session *sessions.Session, localizer *i18n.Localizer, queries *repository.Queries, onSuccess func(*lib.Response) error) (lib.Response, error) {
+func Register(user repository.CreateUserParams, conf Config, session *sessions.Session, localizer *i18n.Localizer, queries *repository.Queries, onSuccess func(*lib.Response) error) (lib.Response, error) {
 	response := lib.Response{}
 	if err := ValidateEmail(user.Email); err != nil {
 		response.StatusCode = http.StatusUnprocessableEntity
@@ -37,13 +36,13 @@ func Register(user repository.CreateUserParams, conf env.Env, session *sessions.
 		return response, err
 	}
 
-	emailHash, err := lib.HashEmail(user.Email, conf.EmailHashKey)
+	emailHash, err := lib.HashEmail(user.Email, conf.UserData.EmailHashKey)
 	if err != nil {
 		response.StatusCode = http.StatusInternalServerError
 		return response, err
 	}
 
-	encryptedEmail, err := lib.EncryptEmail(user.Email, conf.EmailEncryptionKey)
+	encryptedEmail, err := lib.EncryptEmail(user.Email, conf.UserData.EmailEncryptionKey)
 	if err != nil {
 		response.StatusCode = http.StatusInternalServerError
 		return response, err
@@ -85,7 +84,7 @@ func Register(user repository.CreateUserParams, conf env.Env, session *sessions.
 	}
 }
 
-func Login(email, password string, conf env.Env, queries *repository.Queries, session *sessions.Session, onSuccess func(*lib.Response) error) (lib.Response, error) {
+func Login(email, password string, conf Config, queries *repository.Queries, session *sessions.Session, onSuccess func(*lib.Response) error) (lib.Response, error) {
 	response := lib.Response{}
 	if err := ValidateEmail(email); err != nil {
 		response.StatusCode = http.StatusUnprocessableEntity
@@ -98,7 +97,7 @@ func Login(email, password string, conf env.Env, queries *repository.Queries, se
 	}
 
 	userExists := true
-	user, err := queries.FindUserByEmail(email, conf.EmailHashKey)
+	user, err := queries.FindUserByEmail(email, conf.UserData.EmailHashKey)
 	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		response.StatusCode = http.StatusInternalServerError
 		return response, err
