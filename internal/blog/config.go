@@ -5,6 +5,7 @@ import (
 	"net/url"
 
 	"github.com/informalinx/blog/internal/env"
+	"github.com/informalinx/blog/internal/lib"
 )
 
 type Config struct {
@@ -13,6 +14,7 @@ type Config struct {
 	Session  SessionConfig
 	SMTP     SMTPConfig
 	UserData UserDataConfig
+	CORS     lib.CORSConfig
 }
 
 func NewConfig(env env.Env) Config {
@@ -42,6 +44,13 @@ func NewConfig(env env.Env) Config {
 		UserData: UserDataConfig{
 			EmailHashKey:       env.EmailHashKey,
 			EmailEncryptionKey: env.EmailEncryptionKey,
+		},
+		CORS: lib.CORSConfig{
+			AccessControlAllowOrigin:   []string{env.ServerOrigin.String()},
+			AccessControlExposeHeaders: []string{},
+			AccessControlMaxAge:        60,
+			AccessControlAllowMethods:  []string{},
+			AccessControlAllowHeaders:  []string{},
 		},
 	}
 }

@@ -25,6 +25,14 @@ func (response *Response) Redirect(url string, code int) Response {
 	return *response
 }
 
+type CORSConfig struct {
+	AccessControlAllowOrigin   []string
+	AccessControlExposeHeaders []string
+	AccessControlMaxAge        int
+	AccessControlAllowMethods  []string
+	AccessControlAllowHeaders  []string
+}
+
 type HTTPHandler interface {
 	Handle(*http.Request, *sessions.Session) (Response, error)
 }
