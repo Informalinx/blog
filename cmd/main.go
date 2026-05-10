@@ -13,7 +13,6 @@ import (
 	"github.com/gorilla/sessions"
 	"github.com/informalinx/blog/internal/blog"
 	"github.com/informalinx/blog/internal/env"
-	"github.com/informalinx/blog/internal/lib"
 	"github.com/informalinx/blog/internal/repository"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/nicksnyder/go-i18n/v2/i18n"
@@ -104,34 +103,28 @@ func main() {
 
 	mux := http.NewServeMux()
 
-	homeHandler := lib.GlobalHandler{
+	homeHandler := blog.HomeHandler{
+		Config:      conf,
+		Template:    baseTmpl,
 		Logger:      logger,
 		CookieStore: cookieStore,
-		HTTPHandler: &blog.HomeHandler{
-			Config:   conf,
-			Template: baseTmpl,
-		},
 	}
 
-	registerHandler := lib.GlobalHandler{
+	registerHandler := blog.RegisterHandler{
+		Config:      conf,
+		Template:    registerTmpl,
+		Queries:     queries,
+		Localizer:   localizer,
 		Logger:      logger,
 		CookieStore: cookieStore,
-		HTTPHandler: &blog.RegisterHandler{
-			Config:    conf,
-			Template:  registerTmpl,
-			Queries:   queries,
-			Localizer: localizer,
-		},
 	}
 
-	loginHandler := lib.GlobalHandler{
+	loginHandler := blog.LoginHandler{
+		Config:      conf,
+		Queries:     queries,
+		Template:    loginTmpl,
 		Logger:      logger,
 		CookieStore: cookieStore,
-		HTTPHandler: &blog.LoginHandler{
-			Config:   conf,
-			Queries:  queries,
-			Template: loginTmpl,
-		},
 	}
 
 	mux.Handle("/{$}", &homeHandler)

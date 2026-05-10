@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"net/http"
 
 	"github.com/gorilla/sessions"
 	"github.com/informalinx/blog/internal/lib"
@@ -13,39 +12,32 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-func Register(user repository.CreateUserParams, conf Config, session *sessions.Session, localizer *i18n.Localizer, queries *repository.Queries, onSuccess func(*lib.Response) error) (lib.Response, error) {
-	response := lib.Response{}
+func Register(user repository.CreateUserParams, conf Config, session *sessions.Session, localizer *i18n.Localizer, queries *repository.Queries) error {
 	if err := ValidateEmail(user.Email); err != nil {
-		response.StatusCode = http.StatusUnprocessableEntity
-		return response, nil
+		return &ValidationError{Message: err.Error()}
 	}
 
 	if err := ValidateUsername(user.Username); err != nil {
-		response.StatusCode = http.StatusUnprocessableEntity
-		return response, nil
+		return &ValidationError{Message: err.Error()}
 	}
 
 	if err := ValidatePassword(user.Password); err != nil {
-		response.StatusCode = http.StatusUnprocessableEntity
-		return response, nil
+		return &ValidationError{Message: err.Error()}
 	}
 
 	hashed, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 	if err != nil {
-		response.StatusCode = http.StatusInternalServerError
-		return response, err
+		return &CriticalError{Message: err.Error()}
 	}
 
 	emailHash, err := lib.HashEmail(user.Email, conf.UserData.EmailHashKey)
 	if err != nil {
-		response.StatusCode = http.StatusInternalServerError
-		return response, err
+		return &CriticalError{Message: err.Error()}
 	}
 
 	encryptedEmail, err := lib.EncryptEmail(user.Email, conf.UserData.EmailEncryptionKey)
 	if err != nil {
-		response.StatusCode = http.StatusInternalServerError
-		return response, err
+		return &CriticalError{Message: err.Error()}
 	}
 
 	user.Email = encryptedEmail
@@ -54,14 +46,12 @@ func Register(user repository.CreateUserParams, conf Config, session *sessions.S
 
 	emailExists, err := queries.EmailExists(context.Background(), emailHash)
 	if err != nil {
-		response.StatusCode = http.StatusInternalServerError
-		return response, err
+		return &CriticalError{Message: err.Error()}
 	}
 
 	if !emailExists {
 		if err := queries.CreateUser(context.Background(), user); err != nil {
-			response.StatusCode = http.StatusInternalServerError
-			return response, err
+			return &CriticalError{Message: err.Error()}
 		}
 	}
 
@@ -70,37 +60,27 @@ func Register(user repository.CreateUserParams, conf Config, session *sessions.S
 	})
 
 	if err != nil {
-		response.StatusCode = http.StatusInternalServerError
-		return response, err
+		return &CriticalError{Message: err.Error()}
 	}
 
 	session.AddFlash(message, "flash_success")
 
-	if onSuccess == nil {
-		return response.Redirect("/", http.StatusSeeOther), nil
-	} else {
-		err := onSuccess(&response)
-		return response, err
-	}
+	return nil
 }
 
-func Login(email, password string, conf Config, queries *repository.Queries, session *sessions.Session, onSuccess func(*lib.Response) error) (lib.Response, error) {
-	response := lib.Response{}
+func Login(email, password string, conf Config, queries *repository.Queries, session *sessions.Session) error {
 	if err := ValidateEmail(email); err != nil {
-		response.StatusCode = http.StatusUnprocessableEntity
-		return response, nil
+		return &ValidationError{Message: err.Error()}
 	}
 
 	if err := ValidatePassword(password); err != nil {
-		response.StatusCode = http.StatusUnprocessableEntity
-		return response, nil
+		return &ValidationError{Message: err.Error()}
 	}
 
 	userExists := true
 	user, err := queries.FindUserByEmail(email, conf.UserData.EmailHashKey)
 	if err != nil && !errors.Is(err, sql.ErrNoRows) {
-		response.StatusCode = http.StatusInternalServerError
-		return response, err
+		return &CriticalError{Message: err.Error()}
 	}
 
 	// Dummy hash used for mitigating timing attacks. See below
@@ -113,23 +93,16 @@ func Login(email, password string, conf Config, queries *repository.Queries, ses
 	// Hash password before checking if the user exists to avoid timing attacks
 	err = bcrypt.CompareHashAndPassword([]byte(hashed), []byte(password))
 	if err != nil && !errors.Is(err, bcrypt.ErrMismatchedHashAndPassword) {
-		response.StatusCode = http.StatusInternalServerError
-		return response, err
+		return &CriticalError{Message: err.Error()}
 	}
 
 	if !userExists || errors.Is(err, bcrypt.ErrMismatchedHashAndPassword) {
-		response.StatusCode = http.StatusUnauthorized
-		return response, nil
+		return &AuthenticationError{Message: err.Error()}
 	}
 
 	session.Values["user_id"] = user.ID
 
-	if onSuccess == nil {
-		return response.Redirect("/", http.StatusSeeOther), nil
-	} else {
-		err := onSuccess(&response)
-		return response, err
-	}
+	return nil
 }
 
 func IsLoggedIn(userId int, session *sessions.Session) bool {
