@@ -133,7 +133,7 @@ func main() {
 	mux.Handle("/login", lib.CORSMiddleware(conf.CORS, conf.Server.Origin.String(), &loginHandler))
 
 	fmt.Println("Server listening on :", conf.Server.Origin.Host)
-	if err := http.ListenAndServe(conf.Server.Origin.Host, mux); err != nil {
+	if err := http.ListenAndServe(conf.Server.Origin.Host, lib.CSPMiddleware(conf.CSP.Directives, conf.CSP.UseScriptNonce, conf.CSP.UseStyleNonce, conf.CSP.ReportingEndpoints, mux)); err != nil {
 		log.Fatal(err)
 	}
 }

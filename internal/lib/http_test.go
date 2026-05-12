@@ -221,3 +221,123 @@ func ExpectMaxAge(response *http.Response, maxAge int) error {
 
 	return nil
 }
+
+func BenchmarkCSPDirectivesConcatenation(b *testing.B) {
+	directives := StrictCSPDirectives()
+	b.Run("base", func(b *testing.B) {
+		for b.Loop() {
+			_ = CSPConcatBase(directives, true, false)
+		}
+	})
+
+	b.Run("builder", func(b *testing.B) {
+		for b.Loop() {
+			_ = CSPConcatBuilder(directives, true, false)
+		}
+	})
+	b.Run("preallocated", func(b *testing.B) {
+		for b.Loop() {
+			_ = CSPConcatPreallocated(directives, true, false)
+		}
+	})
+}
+
+func CSPConcatBase(directives map[CSPDirective]string, useScriptNonce bool, useStyleNonce bool) string {
+	directivesSlice := []string{}
+	for name, value := range directives {
+		directivesSlice = append(directivesSlice, FormatCSPDirective(name, value))
+	}
+
+	useNonce := useScriptNonce || useStyleNonce
+	if useNonce {
+		nonce := "example"
+		directives = map[CSPDirective]string{}
+		if useScriptNonce {
+			directives[ScriptSrc] = "nonce-" + nonce
+		}
+
+		if useStyleNonce {
+			directives[StyleSrc] = "nonce-" + nonce
+		}
+
+		for name, value := range directives {
+			directivesSlice = append(directivesSlice, FormatCSPDirective(name, value))
+		}
+	}
+
+	directivesStr := strings.Join(directivesSlice, ", ")
+
+	return directivesStr
+}
+
+func CSPConcatBuilder(directives map[CSPDirective]string, useScriptNonce bool, useStyleNonce bool) string {
+	builder := &strings.Builder{}
+	separator := ", "
+	for name, value := range directives {
+		builder.WriteString(string(name))
+		builder.WriteByte(' ')
+		builder.WriteString(value)
+		builder.WriteString(separator)
+	}
+
+	useNonce := useScriptNonce || useStyleNonce
+	if useNonce {
+		nonce := "example"
+		directives = map[CSPDirective]string{}
+		if useScriptNonce {
+			directives[ScriptSrc] = "nonce-" + nonce
+		}
+
+		if useStyleNonce {
+			directives[StyleSrc] = "nonce-" + nonce
+		}
+
+		for name, value := range directives {
+			builder.WriteString(string(name))
+			builder.WriteByte(' ')
+			builder.WriteString(value)
+			builder.WriteString(separator)
+		}
+	}
+
+	directivesStr := builder.String()
+	directivesStr, _ = strings.CutSuffix(directivesStr, separator)
+
+	return directivesStr
+}
+
+func CSPConcatPreallocated(directives map[CSPDirective]string, useScriptNonce bool, useStyleNonce bool) string {
+	directivesCount := len(directives)
+	if useScriptNonce {
+		directivesCount++
+	}
+	if useScriptNonce {
+		directivesCount++
+	}
+
+	directivesSlice := make([]string, 0, directivesCount)
+	for name, value := range directives {
+		directivesSlice = append(directivesSlice, FormatCSPDirective(name, value))
+	}
+
+	useNonce := useScriptNonce || useStyleNonce
+	if useNonce {
+		nonce := "example"
+		directives = map[CSPDirective]string{}
+		if useScriptNonce {
+			directives[ScriptSrc] = "nonce-" + nonce
+		}
+
+		if useStyleNonce {
+			directives[StyleSrc] = "nonce-" + nonce
+		}
+
+		for name, value := range directives {
+			directivesSlice = append(directivesSlice, FormatCSPDirective(name, value))
+		}
+	}
+
+	directivesStr := strings.Join(directivesSlice, ", ")
+
+	return directivesStr
+}

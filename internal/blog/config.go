@@ -15,6 +15,7 @@ type Config struct {
 	SMTP     SMTPConfig
 	UserData UserDataConfig
 	CORS     lib.CORSConfig
+	CSP      CSPConfig
 }
 
 func NewConfig(env env.Env) Config {
@@ -53,6 +54,12 @@ func NewConfig(env env.Env) Config {
 			AccessControlAllowHeaders:     []string{},
 			AccessControlAllowCredentials: false,
 		},
+		CSP: CSPConfig{
+			Directives:         lib.StrictCSPDirectives(),
+			UseScriptNonce:     true,
+			UseStyleNonce:      true,
+			ReportingEndpoints: map[string]url.URL{},
+		},
 	}
 }
 
@@ -85,4 +92,11 @@ type SMTPConfig struct {
 type UserDataConfig struct {
 	EmailHashKey       string
 	EmailEncryptionKey []byte
+}
+
+type CSPConfig struct {
+	Directives         map[lib.CSPDirective]string
+	UseScriptNonce     bool
+	UseStyleNonce      bool
+	ReportingEndpoints map[string]url.URL
 }
