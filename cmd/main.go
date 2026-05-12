@@ -13,6 +13,7 @@ import (
 	"github.com/gorilla/sessions"
 	"github.com/informalinx/blog/internal/blog"
 	"github.com/informalinx/blog/internal/env"
+	"github.com/informalinx/blog/internal/lib"
 	"github.com/informalinx/blog/internal/repository"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/nicksnyder/go-i18n/v2/i18n"
@@ -127,9 +128,9 @@ func main() {
 		CookieStore: cookieStore,
 	}
 
-	mux.Handle("/{$}", &homeHandler)
-	mux.Handle("/register", &registerHandler)
-	mux.Handle("/login", &loginHandler)
+	mux.Handle("/{$}", lib.CORSMiddleware(conf.CORS, conf.Server.Origin.String(), &homeHandler))
+	mux.Handle("/register", lib.CORSMiddleware(conf.CORS, conf.Server.Origin.String(), &registerHandler))
+	mux.Handle("/login", lib.CORSMiddleware(conf.CORS, conf.Server.Origin.String(), &loginHandler))
 
 	fmt.Println("Server listening on :", conf.Server.Origin.Host)
 	if err := http.ListenAndServe(conf.Server.Origin.Host, mux); err != nil {

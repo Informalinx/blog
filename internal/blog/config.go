@@ -46,11 +46,12 @@ func NewConfig(env env.Env) Config {
 			EmailEncryptionKey: env.EmailEncryptionKey,
 		},
 		CORS: lib.CORSConfig{
-			AccessControlAllowOrigin:   []string{env.ServerOrigin.String()},
-			AccessControlExposeHeaders: []string{},
-			AccessControlMaxAge:        60,
-			AccessControlAllowMethods:  []string{},
-			AccessControlAllowHeaders:  []string{},
+			AccessControlAllowOrigin:      []string{env.ServerOrigin.String(), "http://patate.com"},
+			AccessControlExposeHeaders:    []string{},
+			AccessControlMaxAge:           60,
+			AccessControlAllowMethods:     []string{},
+			AccessControlAllowHeaders:     []string{},
+			AccessControlAllowCredentials: false,
 		},
 	}
 }
