@@ -14,6 +14,36 @@ import (
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
 
+type BaseTemplateData struct {
+	Session     *sessions.Session
+	ScriptNonce string
+	StyleNonce  string
+}
+
+func (data *BaseTemplateData) SetNonce(conf CSPConfig, request *http.Request) error {
+	if conf.UseScriptNonce || conf.UseStyleNonce {
+		nonce, found := request.Context().Value(lib.NonceCtxKeyName).(string)
+		if !found || nonce == "" {
+			return &CriticalError{"nonce value not found in request's context"}
+		}
+
+		if conf.UseScriptNonce {
+			data.ScriptNonce = nonce
+		}
+		if conf.UseStyleNonce {
+			data.StyleNonce = nonce
+		}
+	}
+
+	return nil
+}
+
+type HomeTemplateData struct {
+	BaseTemplateData
+
+	Count int
+}
+
 type HomeHandler struct {
 	Config      Config
 	Template    *template.Template
@@ -29,10 +59,19 @@ func (handler *HomeHandler) ServeHTTP(writer http.ResponseWriter, request *http.
 		return
 	}
 
-	data := struct {
-		Session *sessions.Session
-		Count   int
-	}{Count: 10, Session: session}
+	data := HomeTemplateData{
+		BaseTemplateData: BaseTemplateData{
+			Session: session,
+		},
+		Count: 10,
+	}
+
+	if err := data.SetNonce(handler.Config.CSP, request); err != nil {
+		writer.WriteHeader(http.StatusInternalServerError)
+		OnCriticalError(err, handler.Logger)
+		return
+	}
+
 	buffer := bytes.Buffer{}
 	if err := handler.Template.Execute(&buffer, data); err != nil {
 		writer.WriteHeader(http.StatusInternalServerError)
@@ -42,6 +81,10 @@ func (handler *HomeHandler) ServeHTTP(writer http.ResponseWriter, request *http.
 
 	writer.WriteHeader(http.StatusOK)
 	writer.Write(buffer.Bytes())
+}
+
+type LoginTemplateData struct {
+	BaseTemplateData
 }
 
 type LoginHandler struct {
@@ -78,7 +121,15 @@ func (handler *LoginHandler) ServeHTTP(writer http.ResponseWriter, request *http
 	}
 
 	buffer := bytes.Buffer{}
-	data := struct{ Session *sessions.Session }{Session: session}
+	data := LoginTemplateData{}
+	data.Session = session
+
+	if err := data.SetNonce(handler.Config.CSP, request); err != nil {
+		writer.WriteHeader(http.StatusInternalServerError)
+		OnCriticalError(err, handler.Logger)
+		return
+	}
+
 	if err := handler.Template.Execute(&buffer, data); err != nil {
 		writer.WriteHeader(http.StatusInternalServerError)
 		OnCriticalError(err, handler.Logger)
@@ -87,6 +138,10 @@ func (handler *LoginHandler) ServeHTTP(writer http.ResponseWriter, request *http
 
 	writer.WriteHeader(http.StatusOK)
 	writer.Write(buffer.Bytes())
+}
+
+type RegisterTemplateData struct {
+	BaseTemplateData
 }
 
 type RegisterHandler struct {
@@ -127,7 +182,15 @@ func (handler *RegisterHandler) ServeHTTP(writer http.ResponseWriter, request *h
 		return
 	}
 
-	data := struct{ Session *sessions.Session }{Session: session}
+	data := RegisterTemplateData{}
+	data.Session = session
+
+	if err := data.SetNonce(handler.Config.CSP, request); err != nil {
+		writer.WriteHeader(http.StatusInternalServerError)
+		OnCriticalError(err, handler.Logger)
+		return
+	}
+
 	buffer := bytes.Buffer{}
 	if err := handler.Template.Execute(&buffer, data); err != nil {
 		writer.WriteHeader(http.StatusInternalServerError)
