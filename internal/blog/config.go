@@ -16,9 +16,11 @@ type Config struct {
 	UserData UserDataConfig
 	CORS     lib.CORSConfig
 	CSP      CSPConfig
+	CSRF     lib.CSRFConfig
 }
 
 func NewConfig(env env.Env) Config {
+	allowedOrigins := []string{env.ServerOrigin.String(), "http://patate.com"}
 	return Config{
 		Server: ServerConfig{
 			Origin: env.ServerOrigin,
@@ -47,7 +49,7 @@ func NewConfig(env env.Env) Config {
 			EmailEncryptionKey: env.EmailEncryptionKey,
 		},
 		CORS: lib.CORSConfig{
-			AccessControlAllowOrigin:      []string{env.ServerOrigin.String(), "http://patate.com"},
+			AccessControlAllowOrigin:      allowedOrigins,
 			AccessControlExposeHeaders:    []string{},
 			AccessControlMaxAge:           60,
 			AccessControlAllowMethods:     []string{},
@@ -59,6 +61,10 @@ func NewConfig(env env.Env) Config {
 			UseScriptNonce:     true,
 			UseStyleNonce:      true,
 			ReportingEndpoints: map[string]url.URL{},
+		},
+		CSRF: lib.CSRFConfig{
+			AllowedOrigins: allowedOrigins,
+			FormFieldName:  "csrf-token",
 		},
 	}
 }

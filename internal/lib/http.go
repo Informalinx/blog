@@ -186,3 +186,74 @@ func CSPMiddleware(directives map[CSPDirective]string, useScriptNonce bool, useS
 		next.ServeHTTP(writer, request)
 	})
 }
+
+type csrfTokenCtxKey int
+
+const CSRFTokenCtxKey csrfTokenCtxKey = 0
+
+type CSRFConfig struct {
+	AllowedOrigins []string
+	FormFieldName  string
+}
+
+type Store interface {
+	Get(*http.Request) (string, error)
+	Save(string, *http.Request, http.ResponseWriter) error
+}
+
+func CSRFMiddleware(conf CSRFConfig, store Store, next http.Handler) http.Handler {
+	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+		token, err := GenerateCSRFToken()
+		if err != nil {
+			writer.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+		if err := store.Save(token, request, writer); err != nil {
+			writer.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+		safeMethods := []string{http.MethodGet, http.MethodHead, http.MethodOptions, http.MethodTrace}
+		if !slices.Contains(safeMethods, request.Method) {
+			origin := request.Header.Get("Origin")
+			referer := request.Referer()
+			if origin == "" && referer == "" {
+				writer.WriteHeader(http.StatusForbidden)
+				return
+			}
+
+			if origin == "" || !slices.Contains(conf.AllowedOrigins, origin) {
+				writer.WriteHeader(http.StatusForbidden)
+				return
+			}
+
+			formToken := request.PostFormValue(conf.FormFieldName)
+			userToken, err := store.Get(request)
+			if err != nil {
+				writer.WriteHeader(http.StatusInternalServerError)
+				return
+			}
+
+			if formToken != userToken {
+				writer.WriteHeader(http.StatusForbidden)
+				return
+			}
+		}
+
+		request = request.WithContext(context.WithValue(request.Context(), CSRFTokenCtxKey, token))
+
+		next.ServeHTTP(writer, request)
+	})
+}
+
+func GenerateCSRFToken() (string, error) {
+	buff := [64]byte{}
+	if _, err := rand.Read(buff[:]); err != nil {
+		return "", err
+	}
+
+	key := base64.URLEncoding.EncodeToString(buff[:])
+
+	return key, nil
+}
